@@ -1,101 +1,80 @@
-import type { Request, Response } from 'express';
-import type { Category } from '../types/category';   
+import type { Request, Response } from "express";
+import { PrismaClient } from "@prisma/client";
 
-// Menggunakan nama variabel 'dataPembicara' agar tidak bentrok dengan nama fungsi/logic
-let dataPembicara: any[] = []; 
+const prisma = new PrismaClient();
+
+// Helper validasi ID
+const validateId = (id: string) => {
+    const parsedId = parseInt(id);
+    return isNaN(parsedId) ? null : parsedId;
+};
 
 // 1. Menampilkan semua pembicara
-export const getAllPembicara = (req: Request, res: Response) => {
-    res.json(dataPembicara);
-};  
-
-// 2. Menyimpan data pembicara baru
-export const createPembicara = (req: Request, res: Response) => {
+export const getAllPembicara = async (req: Request, res: Response) => {
     try {
-        // Tambahkan topik dan eventId dari req.body
-        const { nama, topik, eventId } = req.body;
+        const pembicara = await prisma.pembicara.findMany();
+        res.json(pembicara);
+    } catch (error) {
+        res.status(500).json({ message: "Gagal mengambil data pembicara", error });
+    }
+};
 
-        // Validasi: pastikan semua field diisi
-        if (!nama || !topik || !eventId) {
-            return res.status(400).json({ 
-                message: "Nama, topik, dan event ID harus diisi" 
-            });
-        }
+// 2. Menyimpan pembicara baru
+export const createPembicara = async (req: Request, res: Response) => {
+    try {
+        const { nama, keahlian } = req.body;
+        if (!nama) return res.status(400).json({ message: "Nama wajib diisi" });
 
-        const newPembicara = {
-            id: dataPembicara.length + 1,
-            nama,
-            topik,
-            eventId
-        };
-
-        // Simpan ke array
-        dataPembicara.push(newPembicara);
-
-        // Kirim response sukses
+        const newPembicara = await prisma.pembicara.create({
+            data: { nama, keahlian },
+        });
         res.status(201).json(newPembicara);
     } catch (error) {
-        res.status(500).json({ 
-            message: "Terjadi kesalahan saat membuat pembicara", 
-            error 
-        });   
+        res.status(500).json({ message: "Gagal menyimpan pembicara", error });
     }
 };
 
-// 3. Menampilkan data pembicara berdasarkan id
-export const getPembicaraById = (req: Request, res: Response) => {
+// 3. Menampilkan pembicara berdasarkan id
+export const getPembicaraById = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id);
-        const findPembicara = dataPembicara.find((p) => p.id === id);
+        const id = validateId(req.params.id);
+        if (id === null) return res.status(400).json({ message: "ID tidak valid" });
 
-        if (!findPembicara) {
-            return res.status(404).json({ message: "Pembicara tidak ditemukan" });
-        }
+        const pembicara = await prisma.pembicara.findUnique({ where: { id } });
+        if (!pembicara) return res.status(404).json({ message: "Pembicara tidak ditemukan" });
 
-        res.json(findPembicara);
+        res.json(pembicara);
     } catch (error) {
-        res.status(500).json({ message: "Terjadi kesalahan saat mengambil data pembicara", error });
+        res.status(500).json({ message: "Gagal mengambil pembicara", error });
     }
 };
 
-// 4. Mengupdate data pembicara berdasarkan id
-export const updatePembicaraById = (req: Request, res: Response) => {
+// 4. Update pembicara
+export const updatePembicaraById = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id);
-        const { nama, topik, eventId } = req.body;
-        const index = dataPembicara.findIndex((p) => p.id === id);
-
-        if (index === -1) {
-            return res.status(404).json({ message: "Pembicara tidak ditemukan" });
-        }
-
-        // Update data yang ada
-        dataPembicara[index] = { 
-            ...dataPembicara[index], 
-            nama: nama || dataPembicara[index].nama,
-            topik: topik || dataPembicara[index].topik,
-            eventId: eventId || dataPembicara[index].eventId
-        };
-
-        res.json(dataPembicara[index]);
+        const id = validateId(req.params.id);
+        if (id === null) return res.status(400).json({ message: "ID tidak valid" });
+        
+        const { nama, keahlian } = req.body;
+        const updated = await prisma.pembicara.update({
+            where: { id },
+            data: { nama, keahlian },
+        });
+        res.json(updated);
     } catch (error) {
-        res.status(500).json({ message: "Terjadi kesalahan saat mengupdate data pembicara", error });
+        res.status(404).json({ message: "Pembicara tidak ditemukan/Gagal update", error });
     }
 };
 
-// 5. Menghapus data pembicara berdasarkan id
-export const deletePembicaraById = (req: Request, res: Response) => {
+// 5. Hapus pembicara
+export const deletePembicaraById = async (req: Request, res: Response) => {
     try {
-        const id = parseInt(req.params.id);
-        const index = dataPembicara.findIndex((p) => p.id === id);
+        const id = validateId(req.params.id);
+        if (id === null) return res.status(400).json({ message: "ID tidak valid" });
 
-        if (index === -1) {
-            return res.status(404).json({ message: "Pembicara tidak ditemukan" });
-        }
-
-        dataPembicara.splice(index, 1);
+        await prisma.pembicara.delete({ where: { id } });
         res.json({ message: "Pembicara berhasil dihapus" });
     } catch (error) {
-        res.status(500).json({ message: "Terjadi kesalahan saat menghapus data pembicara", error });
+        res.status(404).json({ message: "Pembicara tidak ditemukan", error });
     }
 };
