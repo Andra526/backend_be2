@@ -18,16 +18,18 @@ export const getAllEvents = async (req: Request, res: Response) => {
 // 2. Menyimpan data event baru ke database
 export const createEvent = async (req: Request, res: Response) => {
     try {
-        const { name, categoryId, location, dateEvent, description } = req.body;
+        // Ganti 'name' menjadi 'nama' agar sesuai dengan Postman
+        const { nama, categoryId, location, dateEvent, description } = req.body;
 
-        if (!name || !location || !dateEvent) {
+        // Validasi menggunakan 'nama'
+        if (!nama || !location || !dateEvent) {
             return res.status(400).json({ message: "Nama, lokasi, dan tanggal harus diisi" });
         }
 
         const newEvent = await prisma.event.create({
             data: {
-                name,
-                categoryId,
+                name: nama,      // Mapping: nama (dari request) ke name (di database)
+                categoryId: Number(categoryId), // Pastikan menjadi Number!
                 location,
                 dateEvent: new Date(dateEvent),
                 description

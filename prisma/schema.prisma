@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,16 +5,35 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  }
+}
+
+model Category {
+  id    Int     @id @default(autoincrement())
+  nama  String  // Pastikan ini menggunakan 'nama'
+  events Event[]
+}
 
 model Event {
-  id          Int      @id @default(autoincrement())
+  id          Int         @id @default(autoincrement())
   name        String
-  categoryId  String   @map("category_id")
   location    String
-  dateEvent   DateTime @map("date_event")
-  description String   @db.Text
-  createdAt   DateTime @default(now()) @map("created_at")
+  dateEvent   DateTime    @map("date_event")
+  description String
+  createdAt   DateTime    @default(now()) @map("created_at")
+  categoryId  Int         @map("category_id")
+  category    Category    @relation(fields: [categoryId], references: [id])
+  pembicara   Pembicara[]
 
   @@map("events")
+}
+
+model Pembicara {
+  id      Int    @id @default(autoincrement())
+  nama    String
+  topik   String
+  eventId Int    @map("event_id")
+  email   String
+  event   Event  @relation(fields: [eventId], references: [id])
+
+  @@map("pembicara")
 }
