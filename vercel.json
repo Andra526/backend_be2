@@ -1,4 +1,4 @@
 {
-  "buildCommand": "npx prisma generate && tsc",
+  "buildCommand": "./node_modules/.bin/prisma generate && ./node_modules/.bin/tsc -p tsconfig.json",
   "outputDirectory": "dist"
 }
