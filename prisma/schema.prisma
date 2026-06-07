@@ -5,7 +5,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider  = "mysql"
   url       = env("DATABASE_URL")
 }
 
@@ -40,4 +40,13 @@ model Pembicara {
   event   Event  @relation(fields: [eventId], references: [id])
 
   @@map("pembicara")
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String
+  photoUrl  String?  @map("photo_url") // Menggunakan String? agar opsional (bisa kosong)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
 }
