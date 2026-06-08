@@ -7,6 +7,7 @@ import pembicaraRoutes from "./routes/pembicaraRoute.js";
 import userRoute from './routes/userRoute.js';
 
 
+
 const app = express();
 const port = 3000;
 
@@ -22,6 +23,7 @@ app.use('/events', eventRoutes);
 app.use('/categories', categoryRoutes);
 app.use('/pembicara', pembicaraRoutes);
 app.use('/api/users', userRoute);
+app.use("/api", userRoute); // Menambahkan /api sebagai prefix agar rapi
 
 app.use('/api', userRoute); // Menambahkan /api sebagai prefix agar rapi
 

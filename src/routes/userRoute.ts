@@ -1,14 +1,26 @@
 // src/routes/userRoute.ts
 import express from 'express';
-// Tambahkan updateUser di dalam kurung kurawal ini:
-import { getAllUsers, createUser, deleteUser, updateUser, getUserById } from '../controllers/UserController.js';
+import { 
+    getAllUsers, 
+    getUserById, 
+    createUser, 
+    login, 
+    updateUser, 
+    deleteUser 
+} from '../controllers/UserController.js';
 
 const router = express.Router();
 
+// Route untuk manajemen user
 router.get('/', getAllUsers);
-router.post('/', createUser);
-router.delete('/:id', deleteUser);
-router.put('/:id', updateUser); // Sekarang error akan hilang karena updateUser sudah diimpor
 router.get('/:id', getUserById);
+
+// Route untuk Auth (Registrasi dan Login)
+router.post('/', createUser);      // Gunakan ini untuk mendaftar (Registrasi)
+router.post('/login', login);      // Gunakan ini untuk masuk (Login)
+
+// Route untuk update dan hapus
+router.put('/:id', updateUser);
+router.delete('/:id', deleteUser);
 
 export default router;

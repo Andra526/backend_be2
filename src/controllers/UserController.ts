@@ -15,7 +15,7 @@ export const getAllUsers = async (req: express.Request, res: express.Response) =
   }
 };
 
-// GET: Mengambil satu user berdasarkan ID (PENTING UNTUK EDIT PAGE)
+// GET: Mengambil satu user berdasarkan ID
 export const getUserById = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
   try {
@@ -30,7 +30,7 @@ export const getUserById = async (req: express.Request, res: express.Response) =
   }
 };
 
-// POST: Membuat user baru (dengan password hashing)
+// POST: Membuat user baru (Registrasi)
 export const createUser = async (req: express.Request, res: express.Response) => {
   const { username, password } = req.body;
   try {
@@ -48,7 +48,33 @@ export const createUser = async (req: express.Request, res: express.Response) =>
   }
 };
 
-// PUT: Update user (password hanya diupdate jika diisi)
+// POST: Login user
+export const login = async (req: express.Request, res: express.Response) => {
+  const { username, password } = req.body;
+  try {
+    // Cari user berdasarkan username
+    const user = await prisma.user.findFirst({
+      where: { username: username }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User tidak ditemukan" });
+    }
+
+    // Verifikasi password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Password salah" });
+    }
+
+    res.json({ message: "Login berhasil", user: { id: user.id, username: user.username } });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Terjadi kesalahan pada server" });
+  }
+};
+
+// PUT: Update user
 export const updateUser = async (req: express.Request, res: express.Response) => {
   const { id } = req.params;
   const { username, password } = req.body;
@@ -56,7 +82,6 @@ export const updateUser = async (req: express.Request, res: express.Response) =>
   try {
     let dataUpdate: any = { username };
 
-    // Hanya hash dan update password jika user mengirim password baru
     if (password && password !== "") {
       dataUpdate.password = await bcrypt.hash(password, 10);
     }
